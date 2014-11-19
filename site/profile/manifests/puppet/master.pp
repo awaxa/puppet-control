@@ -26,19 +26,29 @@ class profile::puppet::master (
     notify    => Service['pe-httpd'],
   }
 
-  class { 'r10k':
-    version => $r10k_version,
-    sources  => {
-      'control' => {
-        'remote'  => $profile::puppet::params::remote,
-        'basedir' => $environmentpath,
-        'prefix'  => false,
-      },
-    },
-    purgedirs         => [$environmentpath],
-    manage_modulepath => false,
-    mcollective       => true,
-    notify            => Service['pe-httpd'],
+  case $::settings::server {
+    'xmaster.puppet.vm': {
+      file { "${environmentpath}/production":
+        ensure => link,
+        target => '/vagrant',
+      }
+    }
+    default: {
+      class { 'r10k':
+        version => $r10k_version,
+        sources  => {
+          'control' => {
+            'remote'  => $profile::puppet::params::remote,
+            'basedir' => $environmentpath,
+            'prefix'  => false,
+          },
+        },
+        purgedirs         => [$environmentpath],
+        manage_modulepath => false,
+        mcollective       => true,
+        notify            => Service['pe-httpd'],
+      }
+    }
   }
 
   if $autosign {
