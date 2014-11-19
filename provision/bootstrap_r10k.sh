@@ -13,9 +13,19 @@ service pe-httpd restart
   /etc/puppetlabs/puppet/modules --ignore-requirements
 
 cat > /tmp/newsite.pp <<EOM
-class { 'r10k':
-  version => '1.3.4',
-  remote => 'git@github.com:terrimonster/puppet-control.git',
+case $::settings::server {
+  'xmaster.vagrant.vm': {
+    file { "\${settings::environmentpath}/production":
+      ensure => link,
+      target => '/vagrant',
+    }
+  }
+  default: {
+    class { 'r10k':
+      version => '1.3.4',
+      remote => 'git@github.com:terrimonster/puppet-control.git',
+    }
+  }
 }
 EOM
 echo "APPLYING R10K"
